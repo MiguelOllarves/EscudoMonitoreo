@@ -1,0 +1,145 @@
+// CyberShield - Prisma Schema
+// Sistema de Monitoreo de Ciberseguridad
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// Tipos enumerados
+// ─────────────────────────────────────────
+
+enum ThreatType {
+  phishing
+  port_scan
+  unauthorized_access
+  ddos
+  malware
+  brute_force
+  sql_injection
+  xss
+  data_exfiltration
+  ransomware
+}
+
+enum SeverityLevel {
+  low
+  medium
+  high
+  critical
+}
+
+enum AlertStatus {
+  new
+  acknowledged
+  investigating
+  resolved
+  false_positive
+}
+
+enum SensorType {
+  network_ids
+  host_ids
+  firewall
+  waf
+  endpoint
+  email_gateway
+}
+
+// ─────────────────────────────────────────
+// Modelo principal de alertas
+// ─────────────────────────────────────────
+
+model Alert {
+  id              Int           @id @default(autoincrement())
+  alertId         String        @unique @map("alert_id")
+  threatType      ThreatType    @map("threat_type")
+  severity        SeverityLevel
+  status          AlertStatus   @default(new)
+  sensorType      SensorType    @map("sensor_type")
+  sensorId        String        @map("sensor_id")
+  sourceIp        String        @map("source_ip")
+  destinationIp   String        @map("destination_ip")
+  sourcePort      Int?          @map("source_port")
+  destinationPort Int?          @map("destination_port")
+  protocol        String        @default("TCP")
+  title           String
+  description     String
+  rawLog          String?       @map("raw_log")
+  affectedAsset   String?       @map("affected_asset")
+  mitreTactic     String?       @map("mitre_tactic")
+  mitreTechnique  String?       @map("mitre_technique")
+  confidenceScore Float         @default(0) @map("confidence_score")
+  timestamp       DateTime      @default(now())
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([threatType])
+  @@index([severity])
+  @@index([status])
+  @@index([timestamp])
+  @@index([sourceIp])
+  @@map("alerts")
+}
+
+// ─────────────────────────────────────────
+// Estadísticas agregadas (caché para dashboard)
+// ─────────────────────────────────────────
+
+model DashboardStats {
+  id                  Int      @id @default(autoincrement())
+  period              String   // "hourly", "daily"
+  periodStart         DateTime @map("period_start")
+  totalAlerts         Int      @default(0) @map("total_alerts")
+  criticalCount       Int      @default(0) @map("critical_count")
+  highCount           Int      @default(0) @map("high_count")
+  mediumCount         Int      @default(0) @map("medium_count")
+  lowCount            Int      @default(0) @map("low_count")
+  topThreatType       String?  @map("top_threat_type")
+  topSourceIp         String?  @map("top_source_ip")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@unique([period, periodStart])
+  @@map("dashboard_stats")
+}
+
+// ─────────────────────────────────────────
+// Gestión de Usuarios y Auditoría
+// ─────────────────────────────────────────
+
+enum Role {
+  admin
+  analyst
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  password  String
+  name      String
+  role      Role       @default(analyst)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  logs      AuditLog[]
+
+  @@map("users")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  action    String
+  alertId   String?  @map("alert_id")
+  details   String?
+  timestamp DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([alertId])
+  @@map("audit_logs")
+}
