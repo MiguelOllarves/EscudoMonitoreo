@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
-      } catch () {
+      } catch (e) {
         console.error('Failed to parse user data');
         logout();
       }
