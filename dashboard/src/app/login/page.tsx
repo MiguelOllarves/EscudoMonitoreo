@@ -6,7 +6,7 @@ import { Shield, Lock, Mail, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@cybershield.com');
-  const [password, setPassword] = useState('123456');
+  const [password, setPassword] = useState('Password123!');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
