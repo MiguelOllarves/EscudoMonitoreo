@@ -52,6 +52,8 @@ export function useAlertSocket() {
     socket.on('connect', () => {
       console.log('✅ Socket conectado');
       setConnected(true);
+
+      socket.emit('join-alerts-room');
     });
 
     socket.on('new-alert', (alert: SecurityAlert) => {
