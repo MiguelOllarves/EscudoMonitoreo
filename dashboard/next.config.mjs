@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    // Esto le dice a Vercel que ignore los errores de ESLint
+    // Apaga los errores amarillos y rojos de ESLint en Vercel
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Esto ignora los errores de TypeScript (como el 'any')
+    // Apaga los errores de TypeScript en Vercel
     ignoreBuildErrors: true,
   },
 };
