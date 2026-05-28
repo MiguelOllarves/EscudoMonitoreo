@@ -35,7 +35,7 @@ export function useAlertSocket() {
 
     // 2. Conectar WebSocket con autenticación
     // Cambiamos a 'extraHeaders' además de 'auth' para asegurar compatibilidad total
-    const socket = io(BACKEND_URL, {
+    const socket = io(`${BACKEND_URL}/alerts`, {
       path: '/socket.io',
       transports: ['websocket', 'polling'], // Permitir fallback
       reconnection: true,
