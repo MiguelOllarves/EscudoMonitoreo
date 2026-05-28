@@ -9,6 +9,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:300
 const MAX_ALERTS = 100;
 
 export function useAlertSocket() {
+  const { token } = useAuth();
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -33,6 +34,7 @@ export function useAlertSocket() {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 2000,
+      auth: { token: token },
     });
 
     socketRef.current = socket;
@@ -57,7 +59,7 @@ export function useAlertSocket() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [token]);
 
   const clearAlerts = useCallback(() => setAlerts([]), []);
 
