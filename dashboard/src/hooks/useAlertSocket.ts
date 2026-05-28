@@ -4,13 +4,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { SecurityAlert } from '@/types/alert';
 import { fetchWithAuth } from '@/lib/api';
-import { useAuth } from '@/context/AuthContext'; // <--- IMPORTANTE: Importar el contexto de autenticación
+import { useAuth } from '@/context/AuthContext';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://escudomonitoreo.onrender.com';
 const MAX_ALERTS = 100;
 
 export function useAlertSocket() {
-  const { token } = useAuth(); // Ahora sí existe y tiene valor
+  const { token } = useAuth();
   const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -25,54 +25,50 @@ export function useAlertSocket() {
         const res = await fetchWithAuth('/api/alerts?limit=50');
         if (res.ok) {
           const data = await res.json();
-          // Aseguramos que data.alerts exista incluso si es vacío
           setAlerts(data.alerts || []);
         }
       } catch (err) {
-        console.error('Error fetching initial alerts:', err);
+        console.error('Error al cargar historial:', err);
       }
     }
     fetchInitialAlerts();
 
-    // 2. Conectar WebSocket para recibir nuevas alertas
-    // Pasamos el token en la propiedad 'auth' para que el servidor lo valide
-    const socket = io(`${BACKEND_URL}`, {
-      path: '/socket.io', // Ajusta esto si tu backend usa un path diferente
-      transports: ['websocket'],
+    // 2. Conectar WebSocket con autenticación
+    // Cambiamos a 'extraHeaders' además de 'auth' para asegurar compatibilidad total
+    const socket = io(BACKEND_URL, {
+      path: '/socket.io',
+      transports: ['websocket', 'polling'], // Permitir fallback
       reconnection: true,
       auth: { 
         token: token 
       },
+      extraHeaders: {
+        Authorization: `Bearer ${token}` 
+      }
     });
 
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log('🔌 Conectado al WebSocket exitosamente');
+      console.log('✅ Socket conectado');
       setConnected(true);
     });
 
-    socket.on('connect_error', (err) => {
-      console.error('❌ Error de conexión al WebSocket:', err.message);
-      setConnected(false);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('❌ Desconectado del WebSocket');
-      setConnected(false);
-    });
-
     socket.on('new-alert', (alert: SecurityAlert) => {
-      setAlerts((prev) => {
-        const updated = [alert, ...prev];
-        return updated.slice(0, MAX_ALERTS);
-      });
+      setAlerts((prev) => [alert, ...prev].slice(0, MAX_ALERTS));
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('❌ Socket Auth Error:', err.message);
+      setConnected(false);
     });
 
     return () => {
-      socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
-  }, [token]); // El efecto se vuelve a ejecutar si el token cambia
+  }, [token]);
 
   const clearAlerts = useCallback(() => setAlerts([]), []);
 
