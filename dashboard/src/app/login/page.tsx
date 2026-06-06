@@ -9,6 +9,7 @@ import { useSimulatorAudio } from '@/hooks/useSimulatorAudio';
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@cybershield.com');
   const [password, setPassword] = useState('123456');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
