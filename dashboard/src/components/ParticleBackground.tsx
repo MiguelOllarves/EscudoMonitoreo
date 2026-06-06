@@ -3,11 +3,10 @@
 import { useCallback } from 'react';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
-import type { Container, Engine } from 'tsparticles-engine';
+import type { Engine } from 'tsparticles-engine';
 
-export function ParticleBackground() {
+function ParticleBackgroundInner() {
   const particlesInit = useCallback(async (engine: Engine) => {
-    // loadSlim is lighter and contains just what is needed for this effect
     await loadSlim(engine);
   }, []);
 
@@ -86,3 +85,11 @@ export function ParticleBackground() {
     />
   );
 }
+
+// Export with dynamic import to prevent SSR issues with tsparticles
+import dynamic from 'next/dynamic';
+export const ParticleBackground = dynamic(
+  () => Promise.resolve(ParticleBackgroundInner),
+  { ssr: false }
+);
+
