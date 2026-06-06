@@ -1,6 +1,6 @@
 'use client';
 
-import { SecurityAlert, SeverityLevel, SEVERITY_COLORS, SEVERITY_LABELS, THREAT_LABELS, ThreatType } from '@/types/alert';
+import { SecurityAlert, SeverityLevel, SEVERITY_LABELS, THREAT_LABELS, ThreatType } from '@/types/alert';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie, AreaChart, Area, CartesianGrid,
@@ -12,8 +12,8 @@ interface StatsChartsProps {
   alerts: SecurityAlert[];
 }
 
-// ─── Colores del tema ───
-const CHART_COLORS = ['#8b5cf6', '#06b6d4', '#f97316', '#ef4444', '#22c55e', '#eab308', '#ec4899', '#6366f1', '#14b8a6', '#f43f5e'];
+// ─── Colores del tema Cyberpunk ───
+const CHART_COLORS = ['#00f0ff', '#ff00ff', '#fcee0a', '#ff003c', '#00ff00', '#ff8c00', '#8b5cf6', '#06b6d4'];
 
 export function StatsCharts({ alerts }: StatsChartsProps) {
   // ── Datos calculados ──
@@ -23,7 +23,7 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
     return Object.entries(counts).map(([key, value]) => ({
       name: SEVERITY_LABELS[key as SeverityLevel],
       value,
-      color: SEVERITY_COLORS[key as SeverityLevel],
+      color: key === 'critical' ? '#ff003c' : key === 'high' ? '#ff8c00' : key === 'medium' ? '#fcee0a' : '#00f0ff',
     }));
   }, [alerts]);
 
@@ -38,7 +38,7 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
       .map(([type, count], i) => ({
         name: THREAT_LABELS[type as ThreatType] || type,
         count,
-        color: CHART_COLORS[i],
+        color: CHART_COLORS[i % CHART_COLORS.length],
       }));
   }, [alerts]);
 
@@ -67,38 +67,39 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* ── KPI Cards ── */}
-      <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
         <KPICard
-          icon={<Activity size={20} />}
-          label="Total Alertas"
+          icon={<Activity size={24} />}
+          label="EVENTOS DETECTADOS"
           value={alerts.length}
-          color="#8b5cf6"
+          color="#00f0ff"
         />
         <KPICard
-          icon={<Skull size={20} />}
-          label="Críticas"
+          icon={<Skull size={24} />}
+          label="AMENAZAS CRÍTICAS"
           value={criticalCount}
-          color="#ef4444"
+          color="#ff003c"
+          pulse={criticalCount > 0}
         />
         <KPICard
-          icon={<AlertTriangle size={20} />}
-          label="Altas"
+          icon={<AlertTriangle size={24} />}
+          label="ADVERTENCIAS ALTAS"
           value={highCount}
-          color="#f97316"
+          color="#ff8c00"
         />
         <KPICard
-          icon={<Shield size={20} />}
-          label="Nivel de Riesgo"
+          icon={<Shield size={24} />}
+          label="NIVEL DE RIESGO"
           value={`${riskLevel}%`}
-          color={riskLevel > 70 ? '#ef4444' : riskLevel > 40 ? '#eab308' : '#22c55e'}
+          color={riskLevel > 70 ? '#ff003c' : riskLevel > 40 ? '#fcee0a' : '#00f0ff'}
           isRisk
           riskLevel={riskLevel}
         />
       </div>
 
       {/* ── Top Amenazas (Bar) ── */}
-      <div className="glass-panel p-4">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3">Top Amenazas</h3>
+      <div className="glass-panel p-5 border border-[#00f0ff]/20">
+        <h3 className="text-sm font-orbitron font-bold text-[#00f0ff] mb-4 uppercase tracking-widest text-shadow-neon">Top Amenazas (Vectores)</h3>
         {threatData.length > 0 ? (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={threatData} layout="vertical" margin={{ left: 10 }}>
@@ -107,21 +108,23 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
                 type="category"
                 dataKey="name"
                 width={120}
-                tick={{ fill: '#9ca3af', fontSize: 11 }}
+                tick={{ fill: '#a5f3fc', fontSize: 10, fontFamily: 'var(--font-orbitron)' }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  background: '#1e1b4b',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                  borderRadius: '8px',
-                  color: '#e5e7eb',
+                  background: 'rgba(5, 5, 15, 0.9)',
+                  border: '1px solid #00f0ff',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  fontFamily: 'var(--font-sans)',
+                  boxShadow: '0 0 10px rgba(0, 240, 255, 0.2)'
                 }}
               />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+              <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={20}>
                 {threatData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+                  <Cell key={i} fill={entry.color} style={{ filter: `drop-shadow(0 0 5px ${entry.color})` }} />
                 ))}
               </Bar>
             </BarChart>
@@ -132,10 +135,10 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
       </div>
 
       {/* ── Severidad (Pie) ── */}
-      <div className="glass-panel p-4">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3">Distribución por Severidad</h3>
+      <div className="glass-panel p-5 border border-[#ff00ff]/20">
+        <h3 className="text-sm font-orbitron font-bold text-[#ff00ff] mb-4 uppercase tracking-widest text-shadow-neon">Análisis de Severidad</h3>
         {alerts.length > 0 ? (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
                 data={severityData}
@@ -143,21 +146,23 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
+                innerRadius={55}
                 outerRadius={80}
-                paddingAngle={3}
+                paddingAngle={4}
                 strokeWidth={0}
               >
                 {severityData.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+                  <Cell key={i} fill={entry.color} style={{ filter: `drop-shadow(0 0 8px ${entry.color})` }} />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  background: '#1e1b4b',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                  borderRadius: '8px',
-                  color: '#e5e7eb',
+                  background: 'rgba(5, 5, 15, 0.9)',
+                  border: '1px solid #ff00ff',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  fontFamily: 'var(--font-sans)',
+                  boxShadow: '0 0 10px rgba(255, 0, 255, 0.2)'
                 }}
               />
             </PieChart>
@@ -166,11 +171,11 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
           <EmptyChart />
         )}
         {/* Legend */}
-        <div className="flex justify-center gap-4 mt-2">
+        <div className="flex justify-center flex-wrap gap-4 mt-2">
           {severityData.map((s) => (
             <div key={s.name} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-              <span className="text-xs text-gray-400">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color, boxShadow: `0 0 5px ${s.color}` }} />
+              <span className="text-[10px] font-orbitron text-gray-300 uppercase tracking-widest">
                 {s.name} ({s.value})
               </span>
             </div>
@@ -179,43 +184,46 @@ export function StatsCharts({ alerts }: StatsChartsProps) {
       </div>
 
       {/* ── Timeline (Area) ── */}
-      <div className="lg:col-span-2 glass-panel p-4">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3">Timeline de Alertas</h3>
+      <div className="lg:col-span-2 glass-panel p-5 border border-[#00f0ff]/20">
+        <h3 className="text-sm font-orbitron font-bold text-[#00f0ff] mb-4 uppercase tracking-widest text-shadow-neon">Frecuencia Cuántica de Ataques</h3>
         {timelineData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={timelineData}>
               <defs>
                 <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#00f0ff" stopOpacity={0.5} />
+                  <stop offset="95%" stopColor="#00f0ff" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid strokeDasharray="2 2" stroke="rgba(0,240,255,0.1)" vertical={false} />
               <XAxis
                 dataKey="time"
-                tick={{ fill: '#6b7280', fontSize: 10 }}
-                axisLine={false}
+                tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'var(--font-orbitron)' }}
+                axisLine={{ stroke: 'rgba(0,240,255,0.2)' }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: '#6b7280', fontSize: 10 }}
+                tick={{ fill: '#00f0ff', fontSize: 10, fontFamily: 'var(--font-orbitron)' }}
                 axisLine={false}
                 tickLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  background: '#1e1b4b',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                  borderRadius: '8px',
-                  color: '#e5e7eb',
+                  background: 'rgba(5, 5, 15, 0.9)',
+                  border: '1px solid #00f0ff',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  fontFamily: 'var(--font-sans)',
+                  boxShadow: '0 0 10px rgba(0, 240, 255, 0.2)'
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke="#8b5cf6"
-                strokeWidth={2}
+                stroke="#00f0ff"
+                strokeWidth={3}
                 fill="url(#areaGradient)"
+                style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.5))' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -236,6 +244,7 @@ function KPICard({
   color,
   isRisk,
   riskLevel,
+  pulse
 }: {
   icon: React.ReactNode;
   label: string;
@@ -243,23 +252,33 @@ function KPICard({
   color: string;
   isRisk?: boolean;
   riskLevel?: number;
+  pulse?: boolean;
 }) {
   return (
-    <div className="glass-panel p-4 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <span style={{ color }}>{icon}</span>
-        <span className="text-xs text-gray-400">{label}</span>
+    <div 
+      className={`glass-panel p-5 flex flex-col gap-3 relative overflow-hidden group border border-[${color}]/20`}
+      style={{ borderColor: `${color}40`, boxShadow: `0 4px 20px rgba(0,0,0,0.5), inset 0 0 20px ${color}10` }}
+    >
+      <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" style={{ backgroundColor: color }} />
+      
+      <div className="flex items-center gap-2 relative z-10">
+        <span style={{ color, filter: `drop-shadow(0 0 5px ${color})` }} className={pulse ? 'animate-pulse' : ''}>{icon}</span>
+        <span className="text-[10px] font-orbitron text-gray-400 tracking-widest">{label}</span>
       </div>
-      <span className="text-2xl font-bold text-white">{value}</span>
+      <span className="text-3xl font-orbitron font-bold text-white relative z-10" style={{ textShadow: `0 0 10px ${color}80` }}>{value}</span>
+      
       {isRisk && riskLevel !== undefined && (
-        <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div className="w-full h-1 bg-gray-900 rounded-full overflow-hidden relative z-10 mt-1">
           <div
-            className="h-full rounded-full transition-all duration-500"
+            className="h-full rounded-full transition-all duration-500 relative"
             style={{
               width: `${riskLevel}%`,
               backgroundColor: color,
+              boxShadow: `0 0 10px ${color}`
             }}
-          />
+          >
+            <div className="absolute inset-0 bg-white/50 w-full h-full animate-[pulse_1.5s_ease-in-out_infinite]" />
+          </div>
         </div>
       )}
     </div>
@@ -268,8 +287,9 @@ function KPICard({
 
 function EmptyChart() {
   return (
-    <div className="flex items-center justify-center h-[220px] text-gray-600 text-sm">
-      Sin datos aún...
+    <div className="flex flex-col items-center justify-center h-[200px] text-[#00f0ff]/30 font-orbitron text-xs tracking-widest">
+      <Activity className="mb-2 opacity-50 animate-pulse" size={24} />
+      ESPERANDO DATOS TELEMÉTRICOS
     </div>
   );
 }

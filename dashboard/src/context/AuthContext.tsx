@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -29,6 +29,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const logout = useCallback(() => {
+    Cookies.remove('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    router.push('/login');
+  }, [router]);
+
+  const login = useCallback((newToken: string, newUser: User) => {
+    Cookies.set('token', newToken, { expires: 1 }); // 1 day
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+    router.push('/');
+  }, [router]);
+
   useEffect(() => {
     // Load from cookies/localStorage on mount
     const savedToken = Cookies.get('token');
@@ -38,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
-      } catch (e) {
+      } catch {
         console.error('Failed to parse user data');
         logout();
       }
@@ -47,23 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout();
     }
     setIsLoading(false);
-  }, []);
-
-  const login = (newToken: string, newUser: User) => {
-    Cookies.set('token', newToken, { expires: 1 }); // 1 day
-    localStorage.setItem('user', JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
-    router.push('/');
-  };
-
-  const logout = () => {
-    Cookies.remove('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    router.push('/login');
-  };
+  }, [pathname, logout]);
 
   return (
     <AuthContext.Provider

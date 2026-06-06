@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Orbitron } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron" });
 
 export const metadata: Metadata = {
-  title: "CyberShield — Centro de Monitoreo de Ciberseguridad",
+  title: "Escudo de Monitoreo — Command Center",
   description:
-    "Sistema híbrido de protección y monitoreo de ciberseguridad en tiempo real. Monitoreo de amenazas, análisis de riesgos y respuesta a incidentes.",
+    "Sistema de defensa cibernética inmersivo. Monitoreo táctico, análisis de riesgos y respuesta agresiva a incidentes en tiempo real.",
 };
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -19,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className="dark">
-      <body className={`${inter.className} bg-[#0a0a1a] text-gray-100 antialiased`}>
+      <body className={`${inter.variable} ${orbitron.variable} font-sans bg-[#05050f] text-gray-100 antialiased`}>
         <AuthProvider>
           {children}
         </AuthProvider>
